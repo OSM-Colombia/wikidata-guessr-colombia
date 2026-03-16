@@ -99,6 +99,26 @@ $(document).ready(function() {
     // Functions
     //
 
+    // Build Wikimedia Commons thumbnail URL so we request a smaller image (faster download).
+    // Handles: (1) upload.wikimedia.org direct URLs -> thumb path; (2) Special:FilePath URLs -> ?width=
+    function commonsThumbUrl(fullImageUrl, widthPx) {
+        widthPx = widthPx || 1200;
+        var u = fullImageUrl;
+        // Special:FilePath (what Wikidata often returns): add width parameter
+        if (u.indexOf("Special:FilePath") !== -1 || u.indexOf("Special%3AFilePath") !== -1) {
+            var sep = u.indexOf("?") !== -1 ? "&" : "?";
+            return u + sep + "width=" + widthPx;
+        }
+        // Direct upload URL: already a thumb or build thumb path
+        if (u.indexOf("upload.wikimedia.org") === -1 || u.indexOf("/commons/thumb/") !== -1) {
+            return u;
+        }
+        var match = u.match(/^(.+\/commons\/)(.+)$/);
+        if (!match) return u;
+        var filename = match[2].split("/").pop();
+        return match[1] + "thumb/" + match[2] + "/" + widthPx + "px-" + filename;
+    }
+
     // Reset Timer
     function resetTimer(){
         count = 999999;
@@ -253,19 +273,38 @@ $(document).ready(function() {
                         return;
                     }
                     response.json().then(function (data) {
-                        var i = Math.floor(Math.random()*data.results.bindings.length)
-                        var place = data.results.bindings[i];
-
-                        var img = document.getElementById('image');
-                        img.src = place.photo.value;
-                        window.actualLatLng = {lat: place.lat.value, lon: place.lon.value};
-                        window.locID = place.item.value;
-                        window.locName = place.itemLabel.value;
-                        if (place.itemDescription) {
-                            window.locDescription = place.itemDescription.value;
-                        } else {
-                            window.locDescription = undefined;
+                        var bindings = data.results.bindings;
+                        if (!bindings || bindings.length === 0) {
+                            console.warn("No places returned from query");
+                            return;
                         }
+                        var img = document.getElementById('image');
+                        var startIndex = Math.floor(Math.random() * bindings.length);
+                        var tryIndex = startIndex;
+
+                        function applyPlace(place) {
+                            window.actualLatLng = { lat: place.lat.value, lon: place.lon.value };
+                            window.locID = place.item.value;
+                            window.locName = place.itemLabel.value;
+                            window.locDescription = place.itemDescription ? place.itemDescription.value : undefined;
+                        }
+
+                        function tryNextPlace() {
+                            var place = bindings[tryIndex];
+                            applyPlace(place);
+                            img.onerror = function () {
+                                tryIndex = (tryIndex + 1) % bindings.length;
+                                if (tryIndex === startIndex) {
+                                    img.onerror = null;
+                                    svinitialize();
+                                    return;
+                                }
+                                tryNextPlace();
+                            };
+                            img.src = commonsThumbUrl(place.photo.value, 1200);
+                        }
+
+                        tryNextPlace();
                     });
                 }
             )

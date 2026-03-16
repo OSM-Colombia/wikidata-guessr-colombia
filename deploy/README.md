@@ -34,6 +34,11 @@ The app listens on **port 8001** (localhost or all interfaces, depending on your
 - **Direct port**: If the unit binds to `0.0.0.0:8001`, you can open the port in the firewall (less secure; prefer a reverse proxy).
 
 
+## Updating production
+
+1. On the server, update the repo (e.g. `git pull` in `WorkingDirectory`). No need to restart the service for static file changes.
+2. CSS and JS are loaded with `?v=2` in `index.html` so browsers fetch the new files instead of using cache. When you change CSS or JS, bump the version (e.g. `?v=3`) in `index.html`.
+
 ## Useful commands
 
 ```bash
