@@ -3,7 +3,7 @@
 //
 
 function rminitialize() {
-    roundmap = L.map("roundMap").setView([30, 10], 1);
+    roundmap = L.map("roundMap").setView([4.57, -74.30], 6);
 
     L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',

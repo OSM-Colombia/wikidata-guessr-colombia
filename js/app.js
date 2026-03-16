@@ -25,10 +25,12 @@ $(document).ready(function() {
     resetTimer();
 
     var mode = document.getElementById("mode");
+    var params = window.location.search || "";
+    if (params && mode.querySelector('option[value="' + params + '"]')) {
+        mode.value = params;
+    }
     mode.onchange = function() {
-        var value = mode.options[mode.selectedIndex].value;
-        console.log(value);
-        document.location.search = value;
+        document.location.search = mode.options[mode.selectedIndex].value;
     }
 
     // Timer
@@ -65,9 +67,9 @@ $(document).ready(function() {
                 totalScore = totalScore + points;
             }
 
-            $('.round').html('Current Round: <b>'+round+'/5</b>');
-            $('.roundScore').html('Last Round Score: <b>'+roundScore+'</b>');
-            $('.totalScore').html('Total Score: <b>'+totalScore+'</b>');
+            $('.round').html('Ronda actual: <b>'+round+'/5</b>');
+            $('.roundScore').html('Puntos última ronda: <b>'+roundScore+'</b>');
+            $('.totalScore').html('Puntuación total: <b>'+totalScore+'</b>');
 
             var img = document.getElementById('image');
             img.src = "";
@@ -75,7 +77,11 @@ $(document).ready(function() {
             // Reload maps to refresh coords
             svinitialize();
             guess2.setLatLng({lat: -999, lng: -999});
-            mymap.setView([30, 10], 1);
+            if (typeof COLOMBIA_BOUNDS !== "undefined") {
+                mymap.fitBounds(COLOMBIA_BOUNDS, { padding: [20, 20] });
+            } else {
+                mymap.setView([4.57, -74.30], 6);
+            }
 
             // Reset Timer
             resetTimer();
@@ -163,7 +169,7 @@ $(document).ready(function() {
 
         // If distance is undefined, that means they ran out of time and didn't click the guess button
         if(typeof distance === 'undefined' || ranOut == true){
-            $('#roundEnd').html('<p>Dang nabbit! You took too long!.<br/> You didn\'t score any points this round!<br/><br/><button class="btn btn-primary closeBtn" type="button">Continue</button></p></p>');
+            $('#roundEnd').html('<p>¡Se acabó el tiempo!<br/> No sumaste puntos en esta ronda.<br/><br/><button class="btn btn-primary closeBtn" type="button">Continuar</button></p></p>');
             $('#roundEnd').fadeIn();
 
             // Stop Counter
@@ -183,7 +189,7 @@ $(document).ready(function() {
             points = 0;
 
         } else {
-            $('#roundEnd').html('<p>Your guess was<br/><strong><h1>'+distance+'</strong>km</h1> away from the actual location,<br/><h2><a href="'+window.locID+'">'+window.locName+'</a>' + (window.locDescription ? ', '+window.locDescription : '' ) + '.</h2><div id="roundMap"></div><br/> You have scored<br/><h1>'+roundScore+' points</h1> this round!<br/><br/><button class="btn btn-primary closeBtn" type="button">Continue</button></p></p>');
+            $('#roundEnd').html('<p>Tu respuesta estuvo a<br/><strong><h1>'+distance+' km</h1></strong> de la ubicación real.<br/><h2><a href="'+window.locID+'">'+window.locName+'</a>' + (window.locDescription ? ', '+window.locDescription : '' ) + '.</h2><div id="roundMap"></div><br/> Puntos en esta ronda:<br/><h1>'+roundScore+'</h1><br/><br/><button class="btn btn-primary closeBtn" type="button">Continuar</button></p></p>');
             $('#roundEnd').fadeIn();
         };
 
@@ -198,7 +204,7 @@ $(document).ready(function() {
         totalScore = totalScore + points;
 
         $('#miniMap, #pano, #guessButton, #scoreBoard').hide();
-        $('#endGame').html('<h1>Congrats!</h1><h2>Your final score was:</h2><h1>'+totalScore+'!</h1><br/><button class="btn btn-large btn-success playAgain" type="button">Play Again?</button>');
+        $('#endGame').html('<h1>¡Felicidades!</h1><h2>Tu puntuación final:</h2><h1>'+totalScore+'</h1><br/><button class="btn btn-large btn-success playAgain" type="button">¿Jugar de nuevo?</button>');
         $('#endGame').fadeIn(500);
 
         //rminitialize();
@@ -208,7 +214,20 @@ $(document).ready(function() {
     }
 
     function svinitialize() {
-        // Colombia-only: tourist places (monument, historic site, museum, national park)
+        var typeParam = window.location.search.replace(/^\?/, "");
+        var typeFilter;
+        if (typeParam === "Q33506") {
+            typeFilter = "?item wdt:P31/wdt:P279* wd:Q33506 .";
+        } else if (typeParam === "Q839954") {
+            typeFilter = "?item wdt:P31/wdt:P279* wd:Q839954 .";
+        } else if (typeParam === "Q46169") {
+            typeFilter = "?item wdt:P31/wdt:P279* wd:Q46169 .";
+        } else {
+            typeFilter = `
+          { ?item wdt:P31/wdt:P279* wd:Q33506 . }
+          UNION { ?item wdt:P31/wdt:P279* wd:Q839954 . }
+          UNION { ?item wdt:P31/wdt:P279* wd:Q46169 . }`;
+        }
         const query = `
         SELECT ?item ?itemLabel ?itemDescription ?lat ?lon ?photo WHERE {
           ?item wdt:P18 ?photo .
@@ -219,18 +238,7 @@ $(document).ready(function() {
           ?coords wikibase:geoLatitude ?lat .
           ?coords wikibase:geoLongitude ?lon .
 
-          {
-            ?item wdt:P31/wdt:P279* wd:Q33506 .
-          }
-          UNION {
-            ?item wdt:P31/wdt:P279* wd:Q839954 .
-          }
-          UNION {
-            ?item wdt:P31/wdt:P279* wd:Q33585 .
-          }
-          UNION {
-            ?item wdt:P31/wdt:P279* wd:Q46169 .
-          }
+          ${typeFilter}
 
           SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en". }
         }

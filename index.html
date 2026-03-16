@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset='utf-8'>
-        <title>Wikidata Guessr</title>
+        <title>Wikidata Guessr - Colombia</title>
         <link rel='stylesheet' href='css/bootstrap.css' />
         <link rel='stylesheet' href='css/style.css' />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ==" crossorigin=""/>
@@ -18,26 +18,21 @@
             <div id="roundEnd"></div>
             <div id="endGame"></div>
             <div id='scoreBoard'>
-                <span class='round'>Current Round: <b>1/5</b></span><br/>
-                <span class='roundScore'>Last Round Score: <b>0</b></span><br/>
-                <span class='totalScore'>Total Score: <b>0</b></span><br />
-                <span><a href="https://github.com/blinry/wikidata-guessr">View project on GitHub</a></span>
+                <span class='round'>Ronda actual: <b>1/5</b></span><br/>
+                <span class='roundScore'>Puntos última ronda: <b>0</b></span><br/>
+                <span class='totalScore'>Puntuación total: <b>0</b></span><br />
+                <span><a href="https://github.com/angoca/wikidata-guessr-colombia">Ver proyecto en GitHub</a></span>
                 <span>
                     <select id="mode">
-                        <option value="">Start new game...</option>
-                        <option value="">Any item</option>
-                        <option value="?Q7138926">Parliament buildings</option>
-                        <option value="?Q515">Cities</option>
-                        <option value="?Q570116">Tourist attractions</option>
-                        <option value="?Q8502">Mountains</option>
-                        <option value="?Q204832">Roller coasters</option>
-                        <option value="?Q46169">National Park</option>
-                        <option value="?Q9259">World heritage sites</option>
+                        <option value="">Todos (145)</option>
+                        <option value="?Q33506">Monumentos (100)</option>
+                        <option value="?Q839954">Sitios históricos (14)</option>
+                        <option value="?Q46169">Parques nacionales (31)</option>
                     </select>
                 </span>
             </div>
             <div id='miniMap'></div>
-            <div id='guessButton' class="btn btn-large btn-danger">Make Your Guess</div>
+            <div id='guessButton' class="btn btn-large btn-danger">Adivinar ubicación</div>
             <img id='image' src='' />
         </div>
     </body>
