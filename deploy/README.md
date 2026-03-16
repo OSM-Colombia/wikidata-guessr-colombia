@@ -1,52 +1,52 @@
-# Deployment for guessr.osm.lat
+# Deploy (systemd)
 
-Systemd services to run the app and Cloudflare Tunnel at server boot.
+Run the app as a systemd service so it starts on boot and restarts on failure.
 
-## Prerequisites on server (192.168.0.5)
+## Prerequisites
 
-1. App deployed at `/home/angoca/wikidata-guessr-colombia` (clone this repo there).
-2. Python 3 installed.
-3. `cloudflared` installed and tunnel configured in `~/.cloudflared/` (config.yml + credentials).
+- This repo cloned on the server (e.g. `/home/guessr/wikidata-guessr-colombia`).
+- Python 3 installed.
 
-## Install services
+## Install the app service
 
-From your **local machine** (or copy these commands to run on the server):
+1. From the repo root, copy the unit file and adjust **User**, **Group**, and **WorkingDirectory** to your user and repo path:
 
-```bash
-# Copy service files to the server
-scp deploy/wikidata-guessr.service deploy/cloudflared-tunnel.service 192.168.0.5:~/
+   ```bash
+   sudo cp deploy/wikidata-guessr.service /etc/systemd/system/
+   sudo edit /etc/systemd/system/wikidata-guessr.service
+   # Set User=, Group=, WorkingDirectory= to your values
+   ```
 
-# SSH to server and install
-ssh 192.168.0.5
-sudo mv ~/wikidata-guessr.service ~/cloudflared-tunnel.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable wikidata-guessr cloudflared-tunnel
-sudo systemctl start wikidata-guessr cloudflared-tunnel
-sudo systemctl status wikidata-guessr cloudflared-tunnel
-```
+2. Enable and start:
 
-## Ensure app is deployed
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable wikidata-guessr
+   sudo systemctl start wikidata-guessr
+   sudo systemctl status wikidata-guessr
+   ```
 
-On the server, if the repo is not yet cloned:
+The app listens on **port 8001** (localhost or all interfaces, depending on your unit).
 
-```bash
-cd /home/angoca
-git clone https://github.com/OSM-Colombia/wikidata-guessr-colombia.git
-# or clone from your actual repo URL
-```
+## Exposing the app
+
+- **Reverse proxy (nginx, Caddy, etc.)**: Point a vhost to `http://127.0.0.1:8001`.
+- **Direct port**: If the unit binds to `0.0.0.0:8001`, you can open the port in the firewall (less secure; prefer a reverse proxy).
+
 
 ## Useful commands
 
 ```bash
 # Logs
 sudo journalctl -u wikidata-guessr -f
-sudo journalctl -u cloudflared-tunnel -f
 
 # Restart after updating the app
 sudo systemctl restart wikidata-guessr
+
+# Check the app responds
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8001/
 ```
 
-## DNS
+## Troubleshooting
 
-In Cloudflare, ensure `guessr.osm.lat` is a **CNAME** to:
-`f07f48d3-38eb-47a0-b695-367db9a195a0.cfargotunnel.com`
+- **Page not loading**: Ensure the app is running (`sudo systemctl status wikidata-guessr`) and something is listening on 8001 (`ss -tlnp | grep 8001`). Test locally with `curl -I http://127.0.0.1:8001/`.
