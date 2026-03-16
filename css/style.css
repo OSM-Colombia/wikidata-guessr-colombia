@@ -120,6 +120,47 @@ select {
     z-index: 1000;
 }
 
+#helpBox {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    max-width: 280px;
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #eee;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    z-index: 1000;
+}
+
+#helpBox a {
+    color: #7dd;
+}
+
+#helpBox a:hover {
+    text-decoration: underline;
+}
+
+#footerLinks {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+#footerLinks a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    margin-right: 12px;
+}
+
+#footerLinks a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
 /* Change cursor when mousing over clickable layer */
 .leaflet-clickable {
   cursor: default !important;

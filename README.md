@@ -21,6 +21,8 @@ Las fotos se suben a **Wikimedia Commons** como siempre. Para que un lugar salga
 
 Resumen: sube la foto a Commons, luego en el ítem de Wikidata del lugar añade **P18** con el nombre del archivo en Commons, **P17** = Colombia, **P625** = coordenadas, y **P31** (o una subclase vía P279) = monumento, sitio histórico o parque nacional. Sin P18 y P625 el ítem no entra en la consulta.
 
+**Ejemplo:** [Museo del Oro (Bogotá)](https://www.wikidata.org/wiki/Q1109031) en Wikidata tiene P18, P17, P625 y P31 correctamente; sirve de referencia (los museos no entran en el juego por falta de ítems con foto y coordenadas, pero el ítem ilustra las propiedades).
+
 Running locally
 ---------------
 
