@@ -9,13 +9,14 @@ var COLOMBIA_BOUNDS = L.latLngBounds([-4.5, -82.0], [13.0, -66.8]);
 function mminitialize() {
     mymap = L.map("miniMap", {
         minZoom: 4,
+        maxZoom: 19,
         maxBounds: COLOMBIA_BOUNDS,
         maxBoundsViscosity: 1.0
     });
 
     L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-        maxZoom: 18
+        maxZoom: 19
     }).addTo(mymap);
 
     mymap.fitBounds(COLOMBIA_BOUNDS, { padding: [20, 20] });

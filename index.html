@@ -2,19 +2,21 @@
 <html>
     <head>
         <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Wikidata Guessr - Colombia</title>
         <link rel='stylesheet' href='css/bootstrap.css?v=2' />
-        <link rel='stylesheet' href='css/style.css?v=2' />
+        <link rel='stylesheet' href='css/style.css?v=4' />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ==" crossorigin=""/>
         <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
         <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
         <script type='text/javascript' src='js/rnd.js?v=2'></script>
-        <script type='text/javascript' src='js/minimap.js?v=2'></script>
+        <script type='text/javascript' src='js/minimap.js?v=3'></script>
         <script type='text/javascript' src='js/roundmap.js?v=2'></script>
-        <script type='text/javascript' src='js/app.js?v=2'></script>
+        <script type='text/javascript' src='js/app.js?v=3'></script>
     </head>
     <body>
         <div id='content'>
+            <p id="gameIntro">Adivina en el mapa dónde está este lugar de Colombia.</p>
             <div id="roundEnd"></div>
             <div id="endGame"></div>
             <div id='scoreBoard'>
@@ -33,7 +35,10 @@
             </div>
             <div id='miniMap'></div>
             <div id='guessButton' class="btn btn-large btn-danger">Adivinar ubicación</div>
-            <img id='image' src='' />
+            <div id="imageWrap">
+                <div id="imageLoader" aria-hidden="true">Cargando imagen…</div>
+                <img id='image' src='' alt="" />
+            </div>
             <div id='footerLinks'>
                 <p class="footerHelp">Si quieres que una imagen aparezca en este juego, sigue <a href="https://github.com/OSM-Colombia/wikidata-guessr-colombia#c%C3%B3mo-aparecer-en-el-juego-wikidata--commons" target="_blank" rel="noopener">estas instrucciones</a>.</p>
                 <a href="https://osm.lat/Colombia" target="_blank" rel="noopener">osm.lat</a>

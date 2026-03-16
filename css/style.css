@@ -9,6 +9,19 @@ html, body {
     height: 100%;
 }
 
+#gameIntro {
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    right: 220px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 1000;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
 #miniMap {
     width: 500px;
     height: 300px;
@@ -50,10 +63,66 @@ html, body {
     background: #FF6666;
 }
 
+#imageWrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#imageLoader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: #1a1a1a;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+#imageLoader::before {
+    content: "";
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: imageLoaderSpin 0.9s linear infinite;
+}
+
+#imageLoader:not([aria-hidden="false"]) {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#imageLoader[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+@keyframes imageLoaderSpin {
+    to { transform: rotate(360deg); }
+}
+
 #image {
     max-width: 100%;
     max-height: 100%;
-    z-index: 999;
+    position: relative;
+    z-index: 1;
 }
 
 #scoreBoard {
@@ -160,4 +229,96 @@ select {
 /* Change cursor when over entire map */
 .leaflet-container {
     cursor: default !important;
+}
+
+/* Mobile: stack vertically – intro, image on top, map below (no black zone) */
+@media (max-width: 768px) {
+    html, body {
+        min-height: 100%;
+        overflow-x: hidden;
+    }
+
+    #content {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 12px;
+    }
+
+    #gameIntro {
+        display: block;
+        order: 0;
+        margin: 0;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.95);
+        background: rgba(0, 0, 0, 0.85);
+        position: static;
+        flex-shrink: 0;
+    }
+
+    #imageWrap {
+        order: 1;
+        position: static;
+        min-height: 42vh;
+        flex-shrink: 0;
+    }
+
+    #image {
+        max-height: 42vh;
+        width: 100%;
+        object-fit: contain;
+        background: #111;
+    }
+
+    #miniMap {
+        order: 2;
+        position: static;
+        width: 100% !important;
+        height: 320px;
+        margin: 0 0 8px 0;
+        flex-shrink: 0;
+    }
+
+    #guessButton {
+        order: 3;
+        position: static;
+        width: auto;
+        max-width: calc(100% - 24px);
+        margin: 0 12px 12px;
+        flex-shrink: 0;
+    }
+
+    #scoreBoard {
+        order: 4;
+        position: static;
+        width: auto;
+        max-width: 100%;
+        margin: 0 12px 12px;
+        flex-shrink: 0;
+    }
+
+    #footerLinks {
+        order: 5;
+        position: static;
+        margin: 12px 12px 0;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    #roundEnd, #endGame {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 95vw;
+        margin: 0;
+    }
+
+    #roundEnd #roundMap {
+        width: 100%;
+        max-width: 360px;
+        height: 240px;
+    }
 }

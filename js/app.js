@@ -265,16 +265,20 @@ $(document).ready(function() {
         LIMIT 1000
         `;
         const url = `https://query.wikidata.org/bigdata/namespace/wdq/sparql?format=json&query=${query}`;
-            window.fetch(url)
+        var loaderEl = document.getElementById("imageLoader");
+        if (loaderEl) loaderEl.setAttribute("aria-hidden", "false");
+        window.fetch(url)
             .then(
                 function (response) {
                     if (response.status !== 200) {
+                        if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
                         console.warn(`Looks like there was a problem. Status Code: ${response.status}`);
                         return;
                     }
                     response.json().then(function (data) {
                         var bindings = data.results.bindings;
                         if (!bindings || bindings.length === 0) {
+                            if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
                             console.warn("No places returned from query");
                             return;
                         }
@@ -289,17 +293,36 @@ $(document).ready(function() {
                             window.locDescription = place.itemDescription ? place.itemDescription.value : undefined;
                         }
 
+                        function preloadOtherImages(bindings, excludeIndex) {
+                            var n = Math.min(3, bindings.length - 1);
+                            var tried = {};
+                            tried[excludeIndex] = true;
+                            for (var k = 0; k < n; k++) {
+                                var j = Math.floor(Math.random() * bindings.length);
+                                if (tried[j]) continue;
+                                tried[j] = true;
+                                var pre = new Image();
+                                pre.src = commonsThumbUrl(bindings[j].photo.value, 1200);
+                            }
+                        }
+
                         function tryNextPlace() {
+                            if (loaderEl) loaderEl.setAttribute('aria-hidden', 'false');
                             var place = bindings[tryIndex];
                             applyPlace(place);
                             img.onerror = function () {
                                 tryIndex = (tryIndex + 1) % bindings.length;
                                 if (tryIndex === startIndex) {
                                     img.onerror = null;
+                                    if (loaderEl) loaderEl.setAttribute('aria-hidden', 'true');
                                     svinitialize();
                                     return;
                                 }
                                 tryNextPlace();
+                            };
+                            img.onload = function () {
+                                if (loaderEl) loaderEl.setAttribute('aria-hidden', 'true');
+                                preloadOtherImages(bindings, tryIndex);
                             };
                             img.src = commonsThumbUrl(place.photo.value, 1200);
                         }
@@ -309,6 +332,7 @@ $(document).ready(function() {
                 }
             )
             .catch(function (err) {
+                if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
                 console.warn('Fetch Error :-S', err);
             });
     };
