@@ -208,28 +208,33 @@ $(document).ready(function() {
     }
 
     function svinitialize() {
-        var params = window.location.search.substr(1);
-        if (params && params.match(/^Q\d+$/)) {
-            var restriction = "?item wdt:P31 wd:"+params+".";
-        } else {
-            var restriction = "";
-        }
-
+        // Colombia-only: tourist places (monument, historic site, museum, national park)
         const query = `
-        SELECT ?item ?itemLabel ?itemDescription ?lat ?lon ?photo WHERE { 
-            { 
-                SELECT ?item ?photo ?lat ?lon 
-                WHERE { 
-                    ?item wdt:P18 ?photo .  
-                        ?item p:P625 ?statement . 
-                        ?statement psv:P625 ?coords . 
-                        ?coords wikibase:geoLatitude ?lat . 
-                        ?coords wikibase:geoLongitude ?lon . 
-                        ${restriction} 
-                } LIMIT 1000
-            } 
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "en,de". } 
-        } 
+        SELECT ?item ?itemLabel ?itemDescription ?lat ?lon ?photo WHERE {
+          ?item wdt:P18 ?photo .
+          ?item wdt:P17 wd:Q739 .
+
+          ?item p:P625 ?statement .
+          ?statement psv:P625 ?coords .
+          ?coords wikibase:geoLatitude ?lat .
+          ?coords wikibase:geoLongitude ?lon .
+
+          {
+            ?item wdt:P31/wdt:P279* wd:Q33506 .
+          }
+          UNION {
+            ?item wdt:P31/wdt:P279* wd:Q839954 .
+          }
+          UNION {
+            ?item wdt:P31/wdt:P279* wd:Q33585 .
+          }
+          UNION {
+            ?item wdt:P31/wdt:P279* wd:Q46169 .
+          }
+
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en". }
+        }
+        LIMIT 1000
         `;
         const url = `https://query.wikidata.org/bigdata/namespace/wdq/sparql?format=json&query=${query}`;
             window.fetch(url)
