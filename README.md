@@ -1,44 +1,46 @@
-Wikidata Guessr
-===============
+# Wikidata Guessr – Colombia
 
-Guess the locations of random Wikidata items!
+Adivina en el mapa dónde está cada lugar. Este proyecto es un fork que muestra **solo lugares turísticos de Colombia**: monumentos, sitios históricos y parques nacionales (unos 145 ítems con imagen y coordenadas en Wikidata). Los museos quedan fuera porque no hay ítems con foto y coordenadas en la consulta.
 
-This fork shows only **tourist places in Colombia** in one combined category: monuments, historic sites, and national parks (145 items with image and coordinates). Museums are excluded (no items with photo and coordinates).
+## Origen del proyecto
 
-Based on [whereami](https://github.com/webdevbrian/whereami), a GeoGuessr reimplementation by [Brian Kinney](http://www.thebriankinney.com/).
+Este repositorio es un fork de **[wikidata-guessr](https://github.com/blinry/wikidata-guessr)** (por [blinry](https://morr.cc/)), que es quien montó la base del juego: consultas a **Wikidata**, imágenes desde **Wikimedia Commons** y mapas con **OpenStreetMap**. A partir de ese código se adaptó el juego para centrarlo en Colombia y en las categorías indicadas (monumentos, sitios históricos y parques nacionales).
 
-Cómo aparecer en el juego (Wikidata + Commons)
------------------------------------------------
+*wikidata-guessr* a su vez está basado en [whereami](https://github.com/webdevbrian/whereami), una reimplementación tipo GeoGuessr de [Brian Kinney](http://www.thebriankinney.com/).
 
-Las fotos se suben a **Wikimedia Commons** como siempre. Para que un lugar salga en el juego, hace falta que su **ítem en Wikidata** tenga estas propiedades:
+## Cómo aparecer en el juego (Wikidata + Commons)
+
+Las fotos se suben a **Wikimedia Commons** como siempre. Para que un lugar salga en el juego, su **ítem en Wikidata** debe tener estas propiedades:
 
 | Propiedad | Descripción | Ejemplo |
 |-----------|-------------|---------|
 | **P18** (imagen) | Imagen principal del lugar (archivo de Commons) | `Monumento a Bolívar.jpg` |
 | **P17** (país) | Debe ser **Q739** (Colombia) | Q739 |
 | **P625** (coordenadas) | Ubicación geográfica | Punto con lat/lon |
-| **P31** (instancia de) | Tipo de lugar: monumento (**Q33506**), sitio histórico (**Q839954**) o parque nacional (**Q46169**) | Q33506, Q839954 o Q46169 |
+| **P31** (instancia de) | Tipo: monumento (**Q33506**), sitio histórico (**Q839954**) o parque nacional (**Q46169**) | Q33506, Q839954 o Q46169 |
 
-Resumen: sube la foto a Commons, luego en el ítem de Wikidata del lugar añade **P18** con el nombre del archivo en Commons, **P17** = Colombia, **P625** = coordenadas, y **P31** (o una subclase vía P279) = monumento, sitio histórico o parque nacional. Sin P18 y P625 el ítem no entra en la consulta.
+En resumen: sube la foto a Commons y en el ítem de Wikidata del lugar añade **P18** (archivo en Commons), **P17** = Colombia, **P625** = coordenadas, y **P31** (o una subclase vía P279) = monumento, sitio histórico o parque nacional. Sin P18 y P625 el ítem no entra en la consulta.
 
-**Ejemplo:** [Museo del Oro (Bogotá)](https://www.wikidata.org/wiki/Q1109031) en Wikidata tiene P18, P17, P625 y P31 correctamente; sirve de referencia (los museos no entran en el juego por falta de ítems con foto y coordenadas, pero el ítem ilustra las propiedades).
+**Ejemplo:** El [Museo del Oro (Bogotá)](https://www.wikidata.org/wiki/Q1109031) en Wikidata tiene P18, P17, P625 y P31 correctamente y sirve de referencia (los museos no entran en el juego por la consulta actual, pero el ítem ilustra las propiedades).
 
-Running locally
----------------
+Si en el juego el lugar no se ve bien en el mapa (porque el mapa usa OpenStreetMap), puedes **mapearlo opcionalmente** en [OpenStreetMap](https://www.openstreetmap.org/): añade o mejora el punto de interés (POI) en la zona para que el lugar quede representado en el mapa.
 
-No build step is required. Serve the project with a local HTTP server (opening `index.html` directly as a file can cause CORS issues with the Wikidata API).
+## Cómo ejecutarlo en local
 
-**Option 1 – Python 3:**
+No hace falta ningún paso de compilación. Sirve el proyecto con un servidor HTTP local (abrir `index.html` como archivo puede dar problemas de CORS con la API de Wikidata).
+
+**Opción 1 – Python 3:**
 ```bash
 python3 -m http.server 8000
 ```
-Then open http://localhost:8000 in your browser.
+Luego abre http://localhost:8000 en el navegador.
 
-**Option 2 – Node.js (npx):**
+**Opción 2 – Node.js (npx):**
 ```bash
 npx serve .
 ```
-Then open the URL shown in the terminal (e.g. http://localhost:3000).
+Abre la URL que muestre la terminal (por ejemplo http://localhost:3000).
 
-License: GPLv3+
-===============
+## Licencia
+
+Este proyecto se distribuye bajo **GPLv3 o posterior** (GPLv3+). Eso significa que puedes usar, modificar y redistribuir el código, y que las obras derivadas deben publicarse bajo la misma licencia. El texto completo de la licencia está en el repositorio; si no ves un archivo `LICENSE`, puedes consultar [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html).
