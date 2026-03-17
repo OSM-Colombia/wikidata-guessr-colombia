@@ -10,6 +10,9 @@ $(document).ready(function() {
     ranOut = false;
     var distance;
 
+    // Pool of places with pre-validated images (loaded once, used for all 5 rounds)
+    var roundPlaces = null;
+
     //
     //  Init maps
     //
@@ -117,6 +120,23 @@ $(document).ready(function() {
         if (!match) return u;
         var filename = match[2].split("/").pop();
         return match[1] + "thumb/" + match[2] + "/" + widthPx + "px-" + filename;
+    }
+
+    // Preload one image; resolves when loaded, rejects on error (so we know it's available).
+    function preloadImage(url) {
+        return new Promise(function (resolve, reject) {
+            var img = new Image();
+            img.onload = function () { resolve(url); };
+            img.onerror = function () { reject(new Error("Image failed to load")); };
+            img.src = url;
+        });
+    }
+
+    function applyPlace(place) {
+        window.actualLatLng = { lat: parseFloat(place.lat.value), lon: parseFloat(place.lon.value) };
+        window.locID = place.item.value;
+        window.locName = place.itemLabel.value;
+        window.locDescription = place.itemDescription ? place.itemDescription.value : undefined;
     }
 
     // Reset Timer
@@ -233,7 +253,43 @@ $(document).ready(function() {
         window.finished = true;
     }
 
+    function setLoaderText(loaderEl, text, progress) {
+        if (!loaderEl) return;
+        while (loaderEl.firstChild) loaderEl.removeChild(loaderEl.firstChild);
+        loaderEl.appendChild(document.createTextNode(text));
+        if (progress !== undefined && progress !== null) {
+            var span = document.createElement("span");
+            span.className = "imageLoaderProgress";
+            span.textContent = " " + progress;
+            loaderEl.appendChild(span);
+        }
+    }
+
+    function shuffleArray(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+        }
+        return a;
+    }
+
+    function loadNextRoundImage() {
+        if (!roundPlaces || round < 1 || round > 5) return;
+        var place = roundPlaces[round - 1];
+        if (!place) return;
+        applyPlace(place);
+        var img = document.getElementById("image");
+        if (img) img.src = commonsThumbUrl(place.photo.value, 1200);
+    }
+
     function svinitialize() {
+        if (roundPlaces) {
+            loadNextRoundImage();
+            return;
+        }
         var typeParam = window.location.search.replace(/^\?/, "");
         var typeFilter;
         if (typeParam === "Q33506") {
@@ -264,76 +320,89 @@ $(document).ready(function() {
         }
         LIMIT 1000
         `;
-        const url = `https://query.wikidata.org/bigdata/namespace/wdq/sparql?format=json&query=${query}`;
+        const url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?format=json&query=" + encodeURIComponent(query);
         var loaderEl = document.getElementById("imageLoader");
-        if (loaderEl) loaderEl.setAttribute("aria-hidden", "false");
+        if (loaderEl) {
+            loaderEl.setAttribute("aria-hidden", "false");
+            setLoaderText(loaderEl, "Preparando juego…", null);
+        }
         window.fetch(url)
-            .then(
-                function (response) {
-                    if (response.status !== 200) {
-                        if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
-                        console.warn(`Looks like there was a problem. Status Code: ${response.status}`);
+            .then(function (response) {
+                if (response.status !== 200) {
+                    if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
+                    console.warn("Looks like there was a problem. Status Code: " + response.status);
+                    return;
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data) return;
+                var bindings = data.results.bindings;
+                if (!bindings || bindings.length === 0) {
+                    if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
+                    console.warn("No places returned from query");
+                    return;
+                }
+                var shuffled = shuffleArray(bindings);
+                var validated = [];
+                var batchSize = 40;
+                var maxBatches = 6;
+                var totalChecked = 0;
+
+                function runNextBatch(batchIndex) {
+                    if (validated.length >= 5 || batchIndex >= maxBatches) {
+                        finishPreload();
                         return;
                     }
-                    response.json().then(function (data) {
-                        var bindings = data.results.bindings;
-                        if (!bindings || bindings.length === 0) {
-                            if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
-                            console.warn("No places returned from query");
-                            return;
-                        }
-                        var img = document.getElementById('image');
-                        var startIndex = Math.floor(Math.random() * bindings.length);
-                        var tryIndex = startIndex;
-
-                        function applyPlace(place) {
-                            window.actualLatLng = { lat: place.lat.value, lon: place.lon.value };
-                            window.locID = place.item.value;
-                            window.locName = place.itemLabel.value;
-                            window.locDescription = place.itemDescription ? place.itemDescription.value : undefined;
-                        }
-
-                        function preloadOtherImages(bindings, excludeIndex) {
-                            var n = Math.min(3, bindings.length - 1);
-                            var tried = {};
-                            tried[excludeIndex] = true;
-                            for (var k = 0; k < n; k++) {
-                                var j = Math.floor(Math.random() * bindings.length);
-                                if (tried[j]) continue;
-                                tried[j] = true;
-                                var pre = new Image();
-                                pre.src = commonsThumbUrl(bindings[j].photo.value, 1200);
-                            }
-                        }
-
-                        function tryNextPlace() {
-                            if (loaderEl) loaderEl.setAttribute('aria-hidden', 'false');
-                            var place = bindings[tryIndex];
-                            applyPlace(place);
-                            img.onerror = function () {
-                                tryIndex = (tryIndex + 1) % bindings.length;
-                                if (tryIndex === startIndex) {
-                                    img.onerror = null;
-                                    if (loaderEl) loaderEl.setAttribute('aria-hidden', 'true');
-                                    svinitialize();
-                                    return;
-                                }
-                                tryNextPlace();
-                            };
-                            img.onload = function () {
-                                if (loaderEl) loaderEl.setAttribute('aria-hidden', 'true');
-                                preloadOtherImages(bindings, tryIndex);
-                            };
-                            img.src = commonsThumbUrl(place.photo.value, 1200);
-                        }
-
-                        tryNextPlace();
+                    var start = batchIndex * batchSize;
+                    var slice = shuffled.slice(start, start + batchSize);
+                    if (slice.length === 0) {
+                        finishPreload();
+                        return;
+                    }
+                    totalChecked += slice.length;
+                    if (loaderEl) setLoaderText(loaderEl, "Verificando imágenes… ", totalChecked + " comprobadas");
+                    var promises = slice.map(function (b) {
+                        return preloadImage(commonsThumbUrl(b.photo.value, 1200)).then(function () { return b; });
+                    });
+                    Promise.allSettled(promises).then(function (results) {
+                        results.forEach(function (r, i) {
+                            if (r.status === "fulfilled" && r.value) validated.push(r.value);
+                        });
+                        runNextBatch(batchIndex + 1);
                     });
                 }
-            )
+
+                function finishPreload() {
+                    if (validated.length < 5) {
+                        if (loaderEl) {
+                            setLoaderText(loaderEl, "No se pudieron cargar suficientes imágenes. Intenta de nuevo.", null);
+                        }
+                        return;
+                    }
+                    roundPlaces = shuffleArray(validated).slice(0, 5);
+                    var img = document.getElementById("image");
+                    var place = roundPlaces[0];
+                    applyPlace(place);
+                    img.onload = function () {
+                        img.onload = null;
+                        if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
+                    };
+                    img.onerror = function () {
+                        img.onerror = null;
+                        if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
+                    };
+                    img.src = commonsThumbUrl(place.photo.value, 1200);
+                }
+
+                runNextBatch(0);
+            })
             .catch(function (err) {
-                if (loaderEl) loaderEl.setAttribute("aria-hidden", "true");
-                console.warn('Fetch Error :-S', err);
+                if (loaderEl) {
+                    loaderEl.setAttribute("aria-hidden", "true");
+                    console.warn("Fetch Error", err);
+                }
             });
-    };
+    }
+
 });
